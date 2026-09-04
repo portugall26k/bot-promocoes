@@ -16,19 +16,16 @@ def teste():
     if not TOKEN:
         return "TOKEN NAO ENCONTRADO"
 
-    response = requests.get(
-        "https://api.telegram.org/bot" + TOKEN + "/getMe",
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+
+    response = requests.post(
+        url,
+        data={
+            "chat_id": CHAT_ID,
+            "text": "🤖 TESTE: Bot conectado com sucesso ao canal!"
+        },
         timeout=15
     )
-
-    return f"""
-    Status HTTP: {response.status_code}<br>
-    Resposta Telegram: {response.text}
-    """
-
-    url = f"https://api.telegram.org/bot{TOKEN}/getMe"
-
-    response = requests.get(url, timeout=15)
 
     return response.text
 
