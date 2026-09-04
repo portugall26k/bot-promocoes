@@ -14,8 +14,15 @@ def home():
 @app.route("/teste")
 def teste():
     if not TOKEN:
-        return "ERRO: TOKEN NÃO ENCONTRADO"
+        return "TOKEN NAO ENCONTRADO"
 
+    ultimos = TOKEN[-6:]
+
+    return f"""
+    TOKEN ENCONTRADO<br>
+    Tamanho: {len(TOKEN)}<br>
+    Últimos 6 caracteres: {ultimos}
+    """
     url = f"https://api.telegram.org/bot{TOKEN}/getMe"
     response = requests.get(url)
 
