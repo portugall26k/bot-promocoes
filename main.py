@@ -14,7 +14,17 @@ def home():
 @app.route("/teste")
 def teste():
     if not TOKEN:
-        return "ERRO: TELEGRAM_TOKEN NÃO ENCONTRADO"
+        return "TOKEN NAO ENCONTRADO"
+
+    response = requests.get(
+        "https://api.telegram.org/bot" + TOKEN + "/getMe",
+        timeout=15
+    )
+
+    return f"""
+    Status HTTP: {response.status_code}<br>
+    Resposta Telegram: {response.text}
+    """
 
     url = f"https://api.telegram.org/bot{TOKEN}/getMe"
 
