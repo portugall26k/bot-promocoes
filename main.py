@@ -16,6 +16,12 @@ def teste():
     if not TOKEN:
         return "ERRO: TOKEN NÃO ENCONTRADO"
 
+    url = f"https://api.telegram.org/bot{TOKEN}/getMe"
+    response = requests.get(url)
+
+    return response.text
+    
+
     return f"""
     TOKEN ENCONTRADO<br>
     Tamanho: {len(TOKEN)}<br>
