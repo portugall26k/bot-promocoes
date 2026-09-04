@@ -4,7 +4,9 @@ from flask import Flask
 
 app = Flask(__name__)
 
-TOKEN = os.getenv("TELEGRAM_TOKEN")
+print("TOKEN CARREGADO:", bool(TOKEN))
+print("TAMANHO DO TOKEN:", len(TOKEN) if TOKEN else 0)
+print("COMEÇA COM NÚMEROS:", TOKEN.split(":")[0].isdigit() if TOKEN and ":" in TOKEN else False)
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 @app.route("/")
