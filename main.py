@@ -14,14 +14,14 @@ def home():
 @app.route("/teste")
 def teste():
     if not TOKEN:
-        return "ERRO: TELEGRAM_TOKEN não foi encontrado no Render."
+        return "ERRO: TOKEN NÃO ENCONTRADO"
 
-    # Mostra apenas informações do token, nunca o token inteiro
-    print("Token carregado:", True)
-    print("Tamanho:", len(TOKEN))
-    print("Primeiro caractere:", TOKEN[0] if TOKEN else "N/A")
-    print("Possui dois pontos:", ":" in TOKEN)
-
+    return f"""
+    TOKEN ENCONTRADO<br>
+    Tamanho: {len(TOKEN)}<br>
+    Começa com número: {TOKEN[0].isdigit()}<br>
+    Tem dois pontos: {":" in TOKEN}
+    """
     url = f"https://api.telegram.org/bot{TOKEN}/getMe"
 
     response = requests.get(url)
