@@ -13,14 +13,18 @@ def home():
 
 @app.route("/teste")
 def teste():
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    if not TOKEN:
+        return "ERRO: TELEGRAM_TOKEN não foi encontrado no Render"
 
-    response = requests.post(url, data={
-        "chat_id": CHAT_ID,
-        "text": "🤖 Bot de promoções conectado com sucesso!"
-    })
+    url = f"https://api.telegram.org/bot{TOKEN}/getMe"
+    response = requests.get(url)
 
-    return response.text
+    data = response.json()
+
+    if data.get("ok"):
+        return "TOKEN OK! Bot reconhecido pelo Telegram."
+
+    return f"ERRO DO TELEGRAM: {data}"
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 10000))
