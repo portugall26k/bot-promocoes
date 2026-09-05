@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask
+from flask import Flask, request
 
 app = Flask(__name__)
 
@@ -16,16 +16,19 @@ def home():
 def enviar_oferta(produto, preco, link):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
+    texto = (
+        "🔥 OFERTA ENCONTRADA!\n\n"
+        f"🛍️ {produto}\n\n"
+        f"💰 Por apenas {preco}\n\n"
+        "🛒 COMPRAR AGORA 👇\n"
+        f"{link}"
+    )
+
     response = requests.post(
         url,
         data={
             "chat_id": CHAT_ID,
-            "text": (
-                f"🔥 OFERTA!\n\n"
-                f"🛍️ {produto}\n"
-                f"💰 Preço: {preco}\n\n"
-                f"🔗 Comprar: {link}"
-            )
+            "text": texto
         },
         timeout=15
     )
@@ -33,13 +36,16 @@ def enviar_oferta(produto, preco, link):
     return response.json()
 
 
-@app.route("/teste")
-def teste():
-    resultado = enviar_oferta(
-        "Produto de teste",
-        "R$ 99,90",
-        "https://exemplo.com"
-    )
+@app.route("/oferta")
+def oferta():
+    produto = request.args.get("produto")
+    preco = request.args.get("preco")
+    link = request.args.get("link")
+
+    if not produto or not preco or not link:
+        return "Faltam informações. Use: /oferta?produto=...&preco=...&link=..."
+
+    resultado = enviar_oferta(produto, preco, link)
 
     return resultado
 
