@@ -7,27 +7,42 @@ app = Flask(__name__)
 TOKEN = os.getenv("TELEGRAM_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
+
 @app.route("/")
 def home():
     return "Bot de promoções online!"
 
-@app.route("/teste")
-def teste():
-    if not TOKEN:
-        return "TOKEN NAO ENCONTRADO"
 
+def enviar_oferta(produto, preco, link):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
     response = requests.post(
         url,
         data={
             "chat_id": CHAT_ID,
-            "text": "🤖 TESTE: Bot conectado com sucesso ao canal!"
+            "text": (
+                f"🔥 OFERTA!\n\n"
+                f"🛍️ {produto}\n"
+                f"💰 Preço: {preco}\n\n"
+                f"🔗 Comprar: {link}"
+            )
         },
         timeout=15
     )
 
-    return response.text
+    return response.json()
+
+
+@app.route("/teste")
+def teste():
+    resultado = enviar_oferta(
+        "Produto de teste",
+        "R$ 99,90",
+        "https://exemplo.com"
+    )
+
+    return resultado
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 10000))
