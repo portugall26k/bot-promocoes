@@ -1,3 +1,11 @@
 {
-  "ofertas": []
+  "ofertas": [
+    {
+      "produto": "Notebook Gamer Alienware 16 AC16250",
+      "preco_antigo": 8999.00,
+      "preco_atual": 6741.57,
+      "categoria": "Gamer",
+      "link": "https://link.amazon/B02G2Grqx"
+    }
+  ]
 }
