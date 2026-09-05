@@ -84,6 +84,22 @@ def ofertas():
         "resultados": resultados
     }
 
+@app.route("/buscar")
+def buscar():
+    url = "https://www.pelando.com.br/api/deals"
+
+    try:
+        response = requests.get(url, timeout=15)
+
+        return {
+            "status": response.status_code,
+            "resposta": response.text[:5000]
+        }
+
+    except Exception as e:
+        return {
+            "erro": str(e)
+        }
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 10000))
