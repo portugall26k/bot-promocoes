@@ -43,11 +43,46 @@ def oferta():
     link = request.args.get("link")
 
     if not produto or not preco or not link:
-        return "Faltam informações. Use: /oferta?produto=...&preco=...&link=..."
+        return "Faltam informações."
 
-    resultado = enviar_oferta(produto, preco, link)
+    return enviar_oferta(produto, preco, link)
 
-    return resultado
+
+@app.route("/ofertas")
+def ofertas():
+    lista = [
+        {
+            "produto": "Tênis esportivo de teste",
+            "preco": "R$ 99,90",
+            "link": "https://exemplo.com/tenis"
+        },
+        {
+            "produto": "Fone Bluetooth de teste",
+            "preco": "R$ 79,90",
+            "link": "https://exemplo.com/fone"
+        },
+        {
+            "produto": "Produto eletrônico de teste",
+            "preco": "R$ 149,90",
+            "link": "https://exemplo.com/eletronico"
+        }
+    ]
+
+    resultados = []
+
+    for item in lista:
+        resultado = enviar_oferta(
+            item["produto"],
+            item["preco"],
+            item["link"]
+        )
+        resultados.append(resultado)
+
+    return {
+        "ok": True,
+        "ofertas_enviadas": len(resultados),
+        "resultados": resultados
+    }
 
 
 if __name__ == "__main__":
