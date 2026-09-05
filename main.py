@@ -7,7 +7,7 @@ app = Flask(__name__)
 TOKEN = os.getenv("TELEGRAM_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
-# Guarda as ofertas que já foram publicadas
+# Guarda as ofertas publicadas durante o funcionamento do servidor
 ofertas_publicadas = set()
 
 
@@ -71,21 +71,22 @@ def publicar_oferta(
         preco_atual
     )
 
-    # Só publica ofertas com pelo menos 20% de desconto
+    # Só publica descontos de 20% ou mais
     if desconto < 20:
         return {
             "publicada": False,
-            "motivo": "Desconto menor que 20%"
+            "motivo": "Desconto menor que 20%",
+            "desconto": desconto
         }
 
-    # Cria um identificador único para a oferta
+    # Identificador para evitar ofertas repetidas
     identificador = f"{produto}|{link}"
 
-    # Impede publicação duplicada
     if identificador in ofertas_publicadas:
         return {
             "publicada": False,
-            "motivo": "Oferta já publicada"
+            "motivo": "Oferta já publicada",
+            "desconto": desconto
         }
 
     texto = (
@@ -112,7 +113,6 @@ def publicar_oferta(
 
     resultado = response.json()
 
-    # Só marca como publicada se o Telegram aceitou a mensagem
     if resultado.get("ok"):
         ofertas_publicadas.add(identificador)
 
@@ -177,8 +177,43 @@ def ofertas_teste():
     }
 
 
+@app.route("/nova-oferta")
+def nova_oferta():
+    produto = request.args.get("produto")
+    preco_antigo = request.args.get("preco_antigo")
+    preco_atual = request.args.get("preco_atual")
+    categoria = request.args.get("categoria")
+    link = request.args.get("link")
+
+    if not produto or not preco_antigo or not preco_atual or not categoria or not link:
+        return {
+            "ok": False,
+            "erro": "Faltam informações."
+        }
+
+    try:
+        preco_antigo = float(preco_antigo)
+        preco_atual = float(preco_atual)
+    except ValueError:
+        return {
+            "ok": False,
+            "erro": "Os preços precisam ser números."
+        }
+
+    resultado = publicar_oferta(
+        produto=produto,
+        preco_antigo=preco_antigo,
+        preco_atual=preco_atual,
+        categoria=categoria,
+        link=link
+    )
+
+    return resultado
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 10000))
+
     app.run(
         host="0.0.0.0",
         port=port
