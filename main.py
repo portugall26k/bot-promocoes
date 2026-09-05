@@ -7,6 +7,9 @@ app = Flask(__name__)
 TOKEN = os.getenv("TELEGRAM_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
+# Guarda as ofertas que já foram publicadas
+ofertas_publicadas = set()
+
 
 @app.route("/")
 def home():
@@ -56,14 +59,33 @@ def calcular_desconto(preco_antigo, preco_atual):
     return round(desconto)
 
 
-def publicar_oferta(produto, preco_antigo, preco_atual, categoria, link):
-    desconto = calcular_desconto(preco_antigo, preco_atual)
+def publicar_oferta(
+    produto,
+    preco_antigo,
+    preco_atual,
+    categoria,
+    link
+):
+    desconto = calcular_desconto(
+        preco_antigo,
+        preco_atual
+    )
 
     # Só publica ofertas com pelo menos 20% de desconto
     if desconto < 20:
         return {
             "publicada": False,
             "motivo": "Desconto menor que 20%"
+        }
+
+    # Cria um identificador único para a oferta
+    identificador = f"{produto}|{link}"
+
+    # Impede publicação duplicada
+    if identificador in ofertas_publicadas:
+        return {
+            "publicada": False,
+            "motivo": "Oferta já publicada"
         }
 
     texto = (
@@ -88,7 +110,13 @@ def publicar_oferta(produto, preco_antigo, preco_atual, categoria, link):
         timeout=15
     )
 
-    return response.json()
+    resultado = response.json()
+
+    # Só marca como publicada se o Telegram aceitou a mensagem
+    if resultado.get("ok"):
+        ofertas_publicadas.add(identificador)
+
+    return resultado
 
 
 @app.route("/oferta-teste")
@@ -151,4 +179,7 @@ def ofertas_teste():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
