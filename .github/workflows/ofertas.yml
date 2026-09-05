@@ -1,0 +1,16 @@
+name: Publicar ofertas
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Chamar bot
+        run: |
+          curl -L --fail --max-time 60 \
+          "https://bot-promocoes-vce6.onrender.com/publicar-ofertas"
