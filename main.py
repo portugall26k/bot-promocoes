@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 from flask import Flask, request
 
@@ -7,48 +8,12 @@ app = Flask(__name__)
 TOKEN = os.getenv("TELEGRAM_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
-# Guarda as ofertas publicadas durante o funcionamento do servidor
 ofertas_publicadas = set()
 
 
 @app.route("/")
 def home():
     return "Bot de promoções online!"
-
-
-def enviar_oferta(produto, preco, link):
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-
-    texto = (
-        "🔥 OFERTA ENCONTRADA!\n\n"
-        f"🛍️ {produto}\n\n"
-        f"💰 Por apenas {preco}\n\n"
-        "🛒 COMPRAR AGORA 👇\n"
-        f"{link}"
-    )
-
-    response = requests.post(
-        url,
-        data={
-            "chat_id": CHAT_ID,
-            "text": texto
-        },
-        timeout=15
-    )
-
-    return response.json()
-
-
-@app.route("/oferta")
-def oferta():
-    produto = request.args.get("produto")
-    preco = request.args.get("preco")
-    link = request.args.get("link")
-
-    if not produto or not preco or not link:
-        return "Faltam informações."
-
-    return enviar_oferta(produto, preco, link)
 
 
 def calcular_desconto(preco_antigo, preco_atual):
@@ -59,19 +24,18 @@ def calcular_desconto(preco_antigo, preco_atual):
     return round(desconto)
 
 
-def publicar_oferta(
-    produto,
-    preco_antigo,
-    preco_atual,
-    categoria,
-    link
-):
+def publicar_oferta(oferta):
+    produto = oferta["produto"]
+    preco_antigo = float(oferta["preco_antigo"])
+    preco_atual = float(oferta["preco_atual"])
+    categoria = oferta["categoria"]
+    link = oferta["link"]
+
     desconto = calcular_desconto(
         preco_antigo,
         preco_atual
     )
 
-    # Só publica descontos de 20% ou mais
     if desconto < 20:
         return {
             "publicada": False,
@@ -79,14 +43,12 @@ def publicar_oferta(
             "desconto": desconto
         }
 
-    # Identificador para evitar ofertas repetidas
     identificador = f"{produto}|{link}"
 
     if identificador in ofertas_publicadas:
         return {
             "publicada": False,
-            "motivo": "Oferta já publicada",
-            "desconto": desconto
+            "motivo": "Oferta já publicada"
         }
 
     texto = (
@@ -119,96 +81,61 @@ def publicar_oferta(
     return resultado
 
 
-@app.route("/oferta-teste")
-def oferta_teste():
-    resultado = publicar_oferta(
-        produto="Tênis Nike de teste",
-        preco_antigo=399.90,
-        preco_atual=249.90,
-        categoria="Tênis",
-        link="https://exemplo.com/tenis"
-    )
+@app.route("/publicar-ofertas")
+def publicar_ofertas():
+    try:
+        with open("ofertas.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
 
-    return resultado
+        ofertas = dados.get("ofertas", [])
+        resultados = []
 
+        for oferta in ofertas:
+            resultado = publicar_oferta(oferta)
+            resultados.append(resultado)
 
-@app.route("/ofertas-teste")
-def ofertas_teste():
-    ofertas = [
-        {
-            "produto": "Tênis esportivo",
-            "preco_antigo": 299.90,
-            "preco_atual": 179.90,
-            "categoria": "Tênis",
-            "link": "https://exemplo.com/tenis"
-        },
-        {
-            "produto": "Fone Bluetooth",
-            "preco_antigo": 199.90,
-            "preco_atual": 169.90,
-            "categoria": "Eletrônicos",
-            "link": "https://exemplo.com/fone"
-        },
-        {
-            "produto": "Jogo de videogame",
-            "preco_antigo": 299.90,
-            "preco_atual": 199.90,
-            "categoria": "Games",
-            "link": "https://exemplo.com/jogo"
+        return {
+            "ok": True,
+            "quantidade": len(ofertas),
+            "resultados": resultados
         }
-    ]
 
-    resultados = []
-
-    for oferta in ofertas:
-        resultado = publicar_oferta(
-            oferta["produto"],
-            oferta["preco_antigo"],
-            oferta["preco_atual"],
-            oferta["categoria"],
-            oferta["link"]
-        )
-
-        resultados.append(resultado)
-
-    return {
-        "ok": True,
-        "resultados": resultados
-    }
+    except Exception as erro:
+        return {
+            "ok": False,
+            "erro": str(erro)
+        }
 
 
-@app.route("/nova-oferta")
-def nova_oferta():
+@app.route("/oferta")
+def oferta():
     produto = request.args.get("produto")
-    preco_antigo = request.args.get("preco_antigo")
-    preco_atual = request.args.get("preco_atual")
-    categoria = request.args.get("categoria")
+    preco = request.args.get("preco")
     link = request.args.get("link")
 
-    if not produto or not preco_antigo or not preco_atual or not categoria or not link:
-        return {
-            "ok": False,
-            "erro": "Faltam informações."
-        }
+    if not produto or not preco or not link:
+        return "Faltam informações."
 
-    try:
-        preco_antigo = float(preco_antigo)
-        preco_atual = float(preco_atual)
-    except ValueError:
-        return {
-            "ok": False,
-            "erro": "Os preços precisam ser números."
-        }
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-    resultado = publicar_oferta(
-        produto=produto,
-        preco_antigo=preco_antigo,
-        preco_atual=preco_atual,
-        categoria=categoria,
-        link=link
+    texto = (
+        "🔥 OFERTA ENCONTRADA!\n\n"
+        f"🛍️ {produto}\n\n"
+        f"💰 Por apenas {preco}\n\n"
+        "🛒 COMPRAR AGORA 👇\n"
+        f"{link}"
     )
 
-    return resultado
+    response = requests.post(
+        url,
+        data={
+            "chat_id": CHAT_ID,
+            "text": texto
+        },
+        timeout=15
+    )
+
+    return response.json()
 
 
 if __name__ == "__main__":
