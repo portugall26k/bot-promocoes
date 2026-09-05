@@ -48,58 +48,6 @@ def oferta():
     return enviar_oferta(produto, preco, link)
 
 
-@app.route("/ofertas")
-def ofertas():
-    lista = [
-        {
-            "produto": "Tênis esportivo de teste",
-            "preco": "R$ 99,90",
-            "link": "https://exemplo.com/tenis"
-        },
-        {
-            "produto": "Fone Bluetooth de teste",
-            "preco": "R$ 79,90",
-            "link": "https://exemplo.com/fone"
-        },
-        {
-            "produto": "Produto eletrônico de teste",
-            "preco": "R$ 149,90",
-            "link": "https://exemplo.com/eletronico"
-        }
-    ]
-
-    resultados = []
-
-    for item in lista:
-        resultado = enviar_oferta(
-            item["produto"],
-            item["preco"],
-            item["link"]
-        )
-        resultados.append(resultado)
-
-    return {
-        "ok": True,
-        "ofertas_enviadas": len(resultados),
-        "resultados": resultados
-    }
-
-@app.route("/buscar")
-def buscar():
-    url = "https://www.pelando.com.br/api/deals"
-
-    try:
-        response = requests.get(url, timeout=15)
-
-        return {
-            "status": response.status_code,
-            "resposta": response.text[:5000]
-        }
-
-    except Exception as e:
-        return {
-            "erro": str(e)
-        }
 def calcular_desconto(preco_antigo, preco_atual):
     if preco_antigo <= 0:
         return 0
@@ -142,6 +90,7 @@ def publicar_oferta(produto, preco_antigo, preco_atual, categoria, link):
 
     return response.json()
 
+
 @app.route("/oferta-teste")
 def oferta_teste():
     resultado = publicar_oferta(
@@ -153,6 +102,52 @@ def oferta_teste():
     )
 
     return resultado
+
+
+@app.route("/ofertas-teste")
+def ofertas_teste():
+    ofertas = [
+        {
+            "produto": "Tênis esportivo",
+            "preco_antigo": 299.90,
+            "preco_atual": 179.90,
+            "categoria": "Tênis",
+            "link": "https://exemplo.com/tenis"
+        },
+        {
+            "produto": "Fone Bluetooth",
+            "preco_antigo": 199.90,
+            "preco_atual": 169.90,
+            "categoria": "Eletrônicos",
+            "link": "https://exemplo.com/fone"
+        },
+        {
+            "produto": "Jogo de videogame",
+            "preco_antigo": 299.90,
+            "preco_atual": 199.90,
+            "categoria": "Games",
+            "link": "https://exemplo.com/jogo"
+        }
+    ]
+
+    resultados = []
+
+    for oferta in ofertas:
+        resultado = publicar_oferta(
+            oferta["produto"],
+            oferta["preco_antigo"],
+            oferta["preco_atual"],
+            oferta["categoria"],
+            oferta["link"]
+        )
+
+        resultados.append(resultado)
+
+    return {
+        "ok": True,
+        "resultados": resultados
+    }
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 10000))
