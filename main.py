@@ -100,6 +100,59 @@ def buscar():
         return {
             "erro": str(e)
         }
+def calcular_desconto(preco_antigo, preco_atual):
+    if preco_antigo <= 0:
+        return 0
+
+    desconto = ((preco_antigo - preco_atual) / preco_antigo) * 100
+    return round(desconto)
+
+
+def publicar_oferta(produto, preco_antigo, preco_atual, categoria, link):
+    desconto = calcular_desconto(preco_antigo, preco_atual)
+
+    # Só publica ofertas com pelo menos 20% de desconto
+    if desconto < 20:
+        return {
+            "publicada": False,
+            "motivo": "Desconto menor que 20%"
+        }
+
+    texto = (
+        "🔥 OFERTA ENCONTRADA!\n\n"
+        f"🛍️ {produto}\n"
+        f"🏷️ Categoria: {categoria}\n\n"
+        f"❌ De: R$ {preco_antigo:.2f}\n"
+        f"✅ Por: R$ {preco_atual:.2f}\n"
+        f"🔥 {desconto}% OFF\n\n"
+        "🛒 COMPRAR AGORA 👇\n"
+        f"{link}"
+    )
+
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+
+    response = requests.post(
+        url,
+        data={
+            "chat_id": CHAT_ID,
+            "text": texto
+        },
+        timeout=15
+    )
+
+    return response.json()
+
+@app.route("/oferta-teste")
+def oferta_teste():
+    resultado = publicar_oferta(
+        produto="Tênis Nike de teste",
+        preco_antigo=399.90,
+        preco_atual=249.90,
+        categoria="Tênis",
+        link="https://exemplo.com/tenis"
+    )
+
+    return resultado
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 10000))
